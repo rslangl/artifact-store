@@ -3,7 +3,7 @@ BUILD_PATH=./build/package
 OUTPUT_PATH=./output
 BIN_NAME=as
 
-.PHONY: help clean
+.PHONY: help clean build
 
 clean:
 	go clean
@@ -12,7 +12,10 @@ clean:
 test:
 	go test -v ./...
 
-build:
+codegen:
+	go tool oapi-codegen --config=codegen.yaml api/openapi.yaml
+
+build: codegen
 	mkdir -p ${OUTPUT_PATH}
 	go build -o ${OUTPUT_PATH}/${BIN_NAME} ${MAIN_PATH}
 

@@ -1,0 +1,31 @@
+---
+openapi: 3.0.3
+info:
+  title: "Artifact Store API specification"
+  version: "0.1.0"
+paths:
+  /v1/helm:
+    get:
+      summary: "Get all available Helm charts"
+      operationId: "getCharts"
+      responses:
+        '200':
+          description: "List of Helm charts"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Chart'
+
+components:
+  schemas:
+    Chart:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+

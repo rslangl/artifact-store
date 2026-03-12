@@ -1,0 +1,6 @@
+---
+package: api
+generate:
+  - types
+  - gin
+output: internal/api/openapi.gen.go
