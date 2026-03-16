@@ -13,7 +13,8 @@ test:
 	go test -v ./...
 
 codegen:
-	go tool oapi-codegen --config=codegen.yaml api/openapi.yaml
+	oapi-codegen --config=codegen.yaml api/openapi.yaml
+	#go tool oapi-codegen --config=codegen.yaml api/openapi.yaml
 
 build: codegen
 	mkdir -p ${OUTPUT_PATH}

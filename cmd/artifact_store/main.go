@@ -1,19 +1,17 @@
 package main
 
 import (
-	"fmt"
 	"artifact-store/internal/api"
-	"artifact-store/internal/handler"
-  "github.com/gin-gonic/gin"
+	"net/http"
 )
 
 func main() {
-	handler := &handler.Server{}
-
-	r := gin.Default()
-
-	api.RegisterHandlers(r, handler)
-
-	fmt.Printf("Starting server...")
-	r.Run(":8080")
+	server := api.NewServer()
+	router := http.NewServeMux()
+	handler := api.HandlerFromMux(server, router)
+	service := &http.Server{
+		Handler: handler,
+		Addr:    "0.0.0.0:8080",
+	}
+	service.ListenAndServe()
 }

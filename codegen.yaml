@@ -1,6 +1,6 @@
 ---
 package: api
 generate:
-  - types
-  - gin
+  std-http-server: true
+  models: true
 output: internal/api/openapi.gen.go
