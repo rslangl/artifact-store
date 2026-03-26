@@ -5,6 +5,7 @@
 MAIN_PATH := ./cmd/artifact_store
 BUILD_PATH := ./build/package
 OUTPUT_PATH := ./output
+CONFIG_PATH := ./config
 TMP_PATH := ${OUTPUT_PATH}/tmp
 BIN_NAME := artifactstore
 DOCKER_CONTEXT_PATH := ./build/package/
@@ -17,18 +18,25 @@ DOCKER_TAG := local
 .PHONY: help
 help:
 	@printf "%s\n" "Usage:" \
+		"" "Helpers:" \
+		"   make help 			This helptext" \
+		"   make tools 			Install tools" \
 		"" "Quality control:" \
 		"   make audit 			Run quality control checks" \
 		"   make test 			Run all tests" \
 		"   make test/cover 		Run all tests and display coverage" \
 		"   make upgradeable 		List direct dependencies that have upgrades available" \
 		"" "Build/development:" \
-		"   make codegen" \
-		"   make build" \
-		"   make docker-build"
+		"   make codegen 		Generate API code from specification" \
+		"   make build 			Build binary" \
+		"   make docker-build 		Build docker image" \
 		"" "Run:" \
-		"   make run" \
-		"   make docker-run"
+		"   make run 			Run binary" \
+		"   make docker-run 		Run docker container"
+
+.PHONY: tools
+tools:
+	go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
 
 # --------------------
 # Quality control
@@ -68,7 +76,7 @@ tidy:
 
 .PHONY: codegen
 codegen:
-	oapi-codegen --config=codegen.yaml api/openapi.yaml
+	oapi-codegen --config=${CONFIG_PATH}/codegen.yaml api/openapi.yaml
 
 .PHONY: build
 build: codegen
