@@ -1,21 +1,23 @@
-ARG bin=as
+ARG BIN=artifact-store
+ARG CMD=./cmd/artifact_store
 
-FROM golang:tip-alpine3.23
+FROM golang:tip-alpine3.23 AS builder
 
-WORKDIR /app
-
+WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build 
 
-FROM alpine:latest
+RUN CGO_ENABLED=0 GOOD=linux go build -o "/out/${BIN}" "${CMD}"
 
-WORKDIR /app
+FROM gcr.io/distroless/static:nonroot
 
-COPY --from=builder /app/as .
+ARG BIN
+COPY --from=builder "/out/${BIN}" /app
+
+USER nonroot
 
 EXPOSE 8080
 
-CMD ["/as"]
+CMD ["/app"]
