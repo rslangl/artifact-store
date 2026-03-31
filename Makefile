@@ -8,7 +8,7 @@ OUTPUT_PATH := ./output
 CONFIG_PATH := ./config
 TMP_PATH := ${OUTPUT_PATH}/tmp
 BIN_NAME := artifactstore
-DOCKER_CONTEXT_PATH := ./build/package/
+DOCKER_FILE_PATH := ./build/package/Dockerfile
 DOCKER_TAG := local
 
 # --------------------
@@ -85,7 +85,7 @@ build: codegen
 
 .PHONY: docker-build
 docker-build: codegen
-	docker build -t ${BIN_NAME}:${DOCKER_TAG} ${DOCKER_CONTEXT_PATH}
+	docker build -t ${BIN_NAME}:${DOCKER_TAG} -f ${DOCKER_FILE_PATH} .
 
 # --------------------
 # Build/development
