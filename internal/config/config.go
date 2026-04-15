@@ -1,6 +1,8 @@
 package config
 
 import(
+	"os"
+	"log"
 	"fmt"
 )
 
@@ -14,9 +16,13 @@ type Config struct {
 
 func (cfg *Config) Create(path string) error {
 	if path != "" {
-		// TODO: read config file from disk
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("error occurred while reading config file '%v': %v", path, err)
+		}
+		log.Println("%v", data)
 	} else {
-		// TODO: read default config
+		cfg.StorageConfig = ConfigStorage{Enabled: []string{"fs","nas","s3"}}
 	}
 	return nil
 }
