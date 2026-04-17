@@ -1,6 +1,6 @@
 module artifact-store
 
-go 1.26.1
+go 1.26
 
 require (
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
