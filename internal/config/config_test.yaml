@@ -1,0 +1,6 @@
+---
+storage:
+  enabled:
+    - fs
+    - nas
+    - s3
