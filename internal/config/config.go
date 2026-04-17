@@ -8,12 +8,17 @@ import(
 	"go.yaml.in/yaml/v4"
 )
 
-type ConfigStorage struct {
+type FsConfig struct {
+	Path string `yaml:path`
+}
+
+type StorageConfig struct {
 	Enabled []string `yaml:,enabled`
+	Fs FsConfig `yaml:fs`
 }
 
 type Config struct {
-	Storage ConfigStorage `yaml:storage`
+	Storage StorageConfig `yaml:storage`
 }
 
 func (cfg *Config) Create(path string) error {
@@ -29,7 +34,7 @@ func (cfg *Config) Create(path string) error {
 		}
 		//log.Println("%+v\n", data)
 	} else {
-		cfg.Storage = ConfigStorage{Enabled: []string{"fs"}}
+		cfg.Storage = StorageConfig{Enabled: []string{"fs"}}
 	}
 	return nil
 }

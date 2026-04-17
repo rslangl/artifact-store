@@ -34,12 +34,13 @@ type Storage struct {
 	FileSystem backend.FileSystem
 }
 
-func (stg* Storage) Create(storageConfig config.ConfigStorage) error {
-	for _, s := range storageConfig.Enabled {
+func (stg* Storage) Create(config config.StorageConfig) error {
+	for _, s := range config.Enabled {
 		switch(s) {
 			case "fs":
 				stg.FileSystem = backend.FileSystem{}
-				err := stg.FileSystem.Initialize("")
+				fsPath := config.Fs.Path
+				err := stg.FileSystem.Initialize(fsPath)
 				if err != nil {
 					return fmt.Errorf("could not initialize file system storage: %v", err)
 				}

@@ -32,7 +32,7 @@ func TestCreate(t *testing.T) {
 		{
 			"",
 			Config{
-				Storage: ConfigStorage{
+				Storage: StorageConfig{
 					Enabled: []string{"fs"},
 				},
 			},
@@ -42,8 +42,11 @@ func TestCreate(t *testing.T) {
 		{
 			"config_test.yaml",
 			Config{
-				Storage: ConfigStorage{
+				Storage: StorageConfig{
 					Enabled: []string{"fs", "nas", "s3"},
+					Fs: FsConfig{
+						Path: "/tmp/artifact-store/",
+					},
 				},
 			},
 			false,
