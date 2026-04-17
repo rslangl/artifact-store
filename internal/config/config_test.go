@@ -39,11 +39,15 @@ func TestCreate(t *testing.T) {
 			false,
 		},
 		// Test 2: path provided, read contents
-	// 	{
-	// 		"test_config.yaml"
-	// 		Config{},
-	// 		false,
-	// 	},
+		{
+			"config_test.yaml",
+			Config{
+				Storage: ConfigStorage{
+					Enabled: []string{"fs", "nas", "s3"},
+				},
+			},
+			false,
+		},
 	}
 
 	for _, testInput := range tests {
