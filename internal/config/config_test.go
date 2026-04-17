@@ -32,7 +32,7 @@ func TestCreate(t *testing.T) {
 		{
 			"",
 			Config{
-				StorageConfig: ConfigStorage{
+				Storage: ConfigStorage{
 					Enabled: []string{"fs"},
 				},
 			},
@@ -54,8 +54,8 @@ func TestCreate(t *testing.T) {
 				t.Errorf("expected error: %v, got error: %v", testInput.wantErr, err)
 			}
 
-			if !isEqual(cfg.StorageConfig.Enabled, testInput.expected.StorageConfig.Enabled) {
-				t.Errorf("expected %v, got %v", testInput.expected.StorageConfig.Enabled, cfg.StorageConfig.Enabled)
+			if !isEqual(cfg.Storage.Enabled, testInput.expected.Storage.Enabled) {
+				t.Errorf("expected %v, got %v", testInput.expected.Storage.Enabled, cfg.Storage.Enabled)
 			}
 		})
 	}

@@ -9,11 +9,11 @@ import(
 )
 
 type ConfigStorage struct {
-	Enabled []string `yaml:,enabled-storage-types`
+	Enabled []string `yaml:,enabled`
 }
 
 type Config struct {
-	StorageConfig ConfigStorage `yaml:config-storage`
+	Storage ConfigStorage `yaml:storage`
 }
 
 func (cfg *Config) Create(path string) error {
@@ -29,12 +29,12 @@ func (cfg *Config) Create(path string) error {
 		}
 		//log.Println("%+v\n", data)
 	} else {
-		cfg.StorageConfig = ConfigStorage{Enabled: []string{"fs"}}
+		cfg.Storage = ConfigStorage{Enabled: []string{"fs"}}
 	}
 	return nil
 }
 
 func (cfg *Config) ToString() string {
-	output := fmt.Sprintf("storages : %s", cfg.StorageConfig.Enabled)
+	output := fmt.Sprintf("storages : %s", cfg.Storage.Enabled)
 	return output
 }
