@@ -6,13 +6,13 @@ import (
 )
 
 type FileSystem struct {
-	path fs.FS
+	Path fs.FS
 }
 
 // Implementation of the `Initializer` interface
 func (fs *FileSystem) Initialize(path string) error {
 	// TODO: ensure path exists, with read and write permisions
-	fs.path = os.DirFS(path)
+	fs.Path = os.DirFS(path)
 	return nil
 }
 
