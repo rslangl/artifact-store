@@ -1,10 +1,9 @@
 package main
 
 import (
-	"artifact-store/internal/api"
 	"artifact-store/internal/storage"
 	"artifact-store/internal/config"
-	"net/http"
+	"artifact-store/internal/service"
 	"flag"
 	"log"
 )
@@ -36,13 +35,7 @@ func main() {
 	}
 	log.Printf("%v", stg.ToString())
 
-	// TODO: place webserver in subpackage
-	server := api.NewServer()
-	router := http.NewServeMux()
-	handler := api.HandlerFromMux(server, router)
-	service := &http.Server{
-		Handler: handler,
-		Addr:    "0.0.0.0:8080",
-	}
-	service.ListenAndServe()
+	// Create and run webservice
+	svc := service.Create(cfg.Service)
+	svc.Run()
 }
