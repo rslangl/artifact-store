@@ -17,9 +17,145 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Chart'
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/helm/{name}/versions:
+    get:
+      summary: "Get list of versions for a Helm chart"
+      operationId: "getChartVersions"
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Helm chart name"
+      responses:
+        '200':
+          description: "Helm chart version list"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/helm/{name}/{version}:
+    get:
+      summary: "Download version of Helm chart"
+      operationId: "getChart"
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Helm chart name"
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Helm chart version"
+      responses:
+        '200':
+          description: "Helm chart download"
+          content:
+            application/gzip:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/helm/:
+    post:
+      summary: "Add Helm chart"
+      operationId: "addChart"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                chart:
+                  type: string
+                  format: binary
+                  description: "The packaged chart file (.tgz)"
+      responses:
+        '201':
+          description: "Helm chart created"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  version:
+                    type: string
+                required:
+                  - name
+                  - version
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: "Conflict — chart version already exists"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
 components:
   schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
     Chart:
       type: object
       properties:

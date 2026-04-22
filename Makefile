@@ -79,7 +79,7 @@ codegen:
 	go generate -v ./...
 
 .PHONY: build
-build:
+build: codegen
 	mkdir -p ${OUTPUT_PATH}
 	go build -o ${OUTPUT_PATH}/${BIN_NAME} ${MAIN_PATH}
 
