@@ -36,7 +36,7 @@ help:
 
 .PHONY: tools
 tools:
-	go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
+	go get -tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
 
 # --------------------
 # Quality control
@@ -76,10 +76,10 @@ tidy:
 
 .PHONY: codegen
 codegen:
-	oapi-codegen --config=${CONFIG_PATH}/codegen.yaml api/openapi.yaml
+	go generate -v ./...
 
 .PHONY: build
-build: codegen
+build:
 	mkdir -p ${OUTPUT_PATH}
 	go build -o ${OUTPUT_PATH}/${BIN_NAME} ${MAIN_PATH}
 
