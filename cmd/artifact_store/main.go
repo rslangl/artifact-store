@@ -1,12 +1,16 @@
 package main
 
 import (
-	"artifact-store/internal/api"
-	"artifact-store/internal/storage"
-	"artifact-store/internal/config"
-	"net/http"
+	"context"
 	"flag"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"artifact-store/internal/storage"
+	"artifact-store/internal/config"
+	"artifact-store/internal/service"
 )
 
 type CliOpts struct {
@@ -22,6 +26,10 @@ func main() {
 	flag.BoolVar(&opts.debug, "debug", false, "Enable debug logging")
 	flag.Parse()
 
+	// Setup context
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	// Create and print runtime config
 	cfg := &config.Config{}
 	if err := cfg.Create(opts.configFile); err != nil {
@@ -36,13 +44,16 @@ func main() {
 	}
 	log.Printf("%v", stg.ToString())
 
-	// TODO: place webserver in subpackage
-	server := api.NewServer()
-	router := http.NewServeMux()
-	handler := api.HandlerFromMux(server, router)
-	service := &http.Server{
-		Handler: handler,
-		Addr:    "0.0.0.0:8080",
-	}
-	service.ListenAndServe()
+	// Create and run webservice
+	svc := service.Create(cfg.Service)
+	go func() {
+		if err := svc.Run(); err != nil {
+			log.Fatalf("Could not launch web service")
+			stop()
+		}
+	}()
+
+	<-ctx.Done()
+
+	log.Printf("Terminated")
 }

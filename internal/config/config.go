@@ -17,8 +17,13 @@ type StorageConfig struct {
 	Fs FsConfig `yaml:fs`
 }
 
+type ServiceConfig struct {
+	Address string `yaml:address`
+}
+
 type Config struct {
 	Storage StorageConfig `yaml:storage`
+	Service ServiceConfig `yaml:service`
 }
 
 func (cfg *Config) Create(path string) error {
@@ -35,6 +40,7 @@ func (cfg *Config) Create(path string) error {
 		//log.Println("%+v\n", data)
 	} else {
 		cfg.Storage = StorageConfig{Enabled: []string{"fs"}}
+		cfg.Service = ServiceConfig{Address: "0.0.0.0:8080"}
 	}
 	return nil
 }
