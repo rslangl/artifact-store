@@ -1,11 +1,16 @@
 package main
 
 import (
+	"context"
+	"flag"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"artifact-store/internal/storage"
 	"artifact-store/internal/config"
 	"artifact-store/internal/service"
-	"flag"
-	"log"
 )
 
 type CliOpts struct {
@@ -20,6 +25,10 @@ func main() {
 	flag.StringVar(&opts.configFile, "config", "", "Path to config file")
 	flag.BoolVar(&opts.debug, "debug", false, "Enable debug logging")
 	flag.Parse()
+
+	// Setup context
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	// Create and print runtime config
 	cfg := &config.Config{}
@@ -37,5 +46,14 @@ func main() {
 
 	// Create and run webservice
 	svc := service.Create(cfg.Service)
-	svc.Run()
+	go func() {
+		if err := svc.Run(); err != nil {
+			log.Fatalf("Could not launch web service")
+			stop()
+		}
+	}()
+
+	<-ctx.Done()
+
+	log.Printf("Terminated")
 }
