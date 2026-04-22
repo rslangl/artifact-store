@@ -45,7 +45,7 @@ func main() {
 	log.Printf("%v", stg.ToString())
 
 	// Create and run webservice
-	svc := service.Create(cfg.Service)
+	svc := service.Create(cfg.Service, stg)
 	go func() {
 		if err := svc.Run(); err != nil {
 			log.Fatalf("Could not launch web service")

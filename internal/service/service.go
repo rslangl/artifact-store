@@ -6,16 +6,17 @@ import (
 	"net/http"
 	"context"
 
-	"artifact-store/internal/config"
 	"artifact-store/internal/api"
+	"artifact-store/internal/config"
+	"artifact-store/internal/storage"
 )
 
 type WebService struct {
 	httpServer *http.Server
 }
 
-func Create(config config.ServiceConfig) WebService {
-	server := api.NewServer()
+func Create(config config.ServiceConfig, storage *storage.Storage) WebService {
+	server := api.NewServer(storage)
 	router := http.NewServeMux()
 
 	handler := api.HandlerFromMux(server, router)
