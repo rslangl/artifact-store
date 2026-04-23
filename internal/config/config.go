@@ -13,8 +13,9 @@ type FsConfig struct {
 }
 
 type StorageConfig struct {
-	Enabled []string `yaml:,enabled`
-	Fs FsConfig `yaml:fs`
+	Enabled []string `yaml:,enabled` // TODO: remove or refactor
+	Fs FsConfig `yaml:fs` // TODO: remove or refactor
+	Backend string `yaml:backend`
 }
 
 type ServiceConfig struct {

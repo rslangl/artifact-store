@@ -10,17 +10,17 @@ import (
 )
 
 type Server struct{
-	storage *storage.Storage
+	storageHandler *storage.Storage
 }
 
-func NewServer(stg *storage.Storage) Server {
+func NewServer(storageHandler *storage.Storage) Server {
 	return Server{
-		storage: stg,
+		storageHandler: storageHandler,
 	}
 }
 
 func (s Server) GetCharts(w http.ResponseWriter, r *http.Request) {
-	data, err := s.storage.FileSystem.Read("") // TODO: constant for root path for Helm charts
+	data, err := s.storageHandler.Read("") // TODO: constant for root path for Helm charts
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -31,7 +31,7 @@ func (s Server) GetCharts(w http.ResponseWriter, r *http.Request) {
 
 func (s Server) GetChart(w http.ResponseWriter, r *http.Request, name string, version string) {
 	path := path.Join("", name)  // TODO: handle version for chart
-	data, err := s.storage.FileSystem.Read(path)
+	data, err := s.storageHandler.Read(path)
 	if err != nil {
 		// TODO: handle 404 Not Found
 		w.WriteHeader(http.StatusInternalServerError)

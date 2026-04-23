@@ -38,14 +38,18 @@ func main() {
 	log.Printf("%v", cfg.ToString())
 
 	// Create and print storage config
-	stg := &storage.Storage{}
-	if err := stg.Create(cfg.Storage); err != nil {
-		log.Fatalf("Could not setup storage: %v", err)
+	// stg := &storage.Storage{}
+	// if err := stg.Create(cfg.Storage); err != nil {
+	// 	log.Fatalf("Could not setup storage: %v", err)
+	// }
+	// log.Printf("%v", stg.ToString())
+	
+	if handler, err := &storage.New(cfg.Storage); err != nil {
+		log.Fatalf("Could not initialize storage backend: %v", err)
 	}
-	log.Printf("%v", stg.ToString())
 
 	// Create and run webservice
-	svc := service.Create(cfg.Service, stg)
+	svc := service.Create(cfg.Service, handler)
 	go func() {
 		if err := svc.Run(); err != nil {
 			log.Fatalf("Could not launch web service")
