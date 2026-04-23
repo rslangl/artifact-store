@@ -8,6 +8,9 @@ package api
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // Chart defines model for Chart.
@@ -16,11 +19,35 @@ type Chart struct {
 	Name *string `json:"name,omitempty"`
 }
 
+// Error defines model for Error.
+type Error struct {
+	Code    *int    `json:"code,omitempty"`
+	Message *string `json:"message,omitempty"`
+}
+
+// AddChartMultipartBody defines parameters for AddChart.
+type AddChartMultipartBody struct {
+	// Chart The packaged chart file (.tgz)
+	Chart *openapi_types.File `json:"chart,omitempty"`
+}
+
+// AddChartMultipartRequestBody defines body for AddChart for multipart/form-data ContentType.
+type AddChartMultipartRequestBody AddChartMultipartBody
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Get all available Helm charts
 	// (GET /v1/helm)
 	GetCharts(w http.ResponseWriter, r *http.Request)
+	// Add Helm chart
+	// (POST /v1/helm/)
+	AddChart(w http.ResponseWriter, r *http.Request)
+	// Get list of versions for a Helm chart
+	// (GET /v1/helm/{name}/versions)
+	GetChartVersions(w http.ResponseWriter, r *http.Request, name string)
+	// Download version of Helm chart
+	// (GET /v1/helm/{name}/{version})
+	GetChart(w http.ResponseWriter, r *http.Request, name string, version string)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -37,6 +64,79 @@ func (siw *ServerInterfaceWrapper) GetCharts(w http.ResponseWriter, r *http.Requ
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetCharts(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AddChart operation middleware
+func (siw *ServerInterfaceWrapper) AddChart(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AddChart(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetChartVersions operation middleware
+func (siw *ServerInterfaceWrapper) GetChartVersions(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", r.PathValue("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetChartVersions(w, r, name)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetChart operation middleware
+func (siw *ServerInterfaceWrapper) GetChart(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", r.PathValue("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "version" -------------
+	var version string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "version", r.PathValue("version"), &version, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "version", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetChart(w, r, name, version)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -167,6 +267,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	}
 
 	m.HandleFunc("GET "+options.BaseURL+"/v1/helm", wrapper.GetCharts)
+	m.HandleFunc("POST "+options.BaseURL+"/v1/helm/", wrapper.AddChart)
+	m.HandleFunc("GET "+options.BaseURL+"/v1/helm/{name}/versions", wrapper.GetChartVersions)
+	m.HandleFunc("GET "+options.BaseURL+"/v1/helm/{name}/{version}", wrapper.GetChart)
 
 	return m
 }
