@@ -8,7 +8,7 @@ import (
 )
 
 type Storage interface {
-	Read(location string) ([]byte, error)
+	Read(location string, version string) ([]byte, error)
 	Write(bytes []byte) error
 }
 

@@ -3,8 +3,9 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"net/http"
-	"path"
+	//"path"
 
 	"artifact-store/internal/storage"
 )
@@ -20,7 +21,7 @@ func NewServer(storageHandler storage.Storage) Server {
 }
 
 func (s Server) GetCharts(w http.ResponseWriter, r *http.Request) {
-	data, err := s.storageHandler.Read(".") // TODO: constant for root path for Helm charts
+	data, err := s.storageHandler.Read("", "")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -30,11 +31,15 @@ func (s Server) GetCharts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) GetChart(w http.ResponseWriter, r *http.Request, name string, version string) {
-	path := path.Join("", name)  // TODO: handle version for chart
-	data, err := s.storageHandler.Read(path)
+	data, err := s.storageHandler.Read(name, version)
 	if err != nil {
-		// TODO: handle 404 Not Found
+		if err == fs.ErrNotExist { // TODO: map to generic error types in case other backends are used
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(err) // TODO: define error type
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(err) // TODO: define error type
 		return
 	}
 	w.WriteHeader(http.StatusOK)
