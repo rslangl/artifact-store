@@ -11,18 +11,14 @@ type FileSystem struct {
 	Path fs.FS
 }
 
-func NewFSBackend(path string) *FileSystem {
+func NewFSBackend(path string) (*FileSystem, error) {
+	if err := os.MkdirAll(path, 0744); err != nil {
+		return nil, fmt.Errorf("Could not create root path for file system backend path '%v': %v", path, err)
+	}
 	return &FileSystem{
 		Path: os.DirFS(path),
-	}
+	}, nil
 }
-
-// Implementation of the `Initializer` interface
-// func (f *FileSystem) Initialize(path string) error {
-// 	// TODO: ensure path exists, with read and write permisions
-// 	f.Path = os.DirFS(path)
-// 	return nil
-// }
 
 // Implementation of the `Writer` interface
 func (f *FileSystem) Write(bytes []byte) error {
@@ -37,9 +33,4 @@ func (f *FileSystem) Read(resource string) ([]byte, error) {
 		return nil, fmt.Errorf("File read error for '%v': %v", resource, err)
 	}
 	return bytes, nil
-}
-
-// Implementation of the `Terminator` interface
-func (fs *FileSystem) Close() error {
-	return nil
 }

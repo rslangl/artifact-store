@@ -20,7 +20,7 @@ func NewServer(storageHandler storage.Storage) Server {
 }
 
 func (s Server) GetCharts(w http.ResponseWriter, r *http.Request) {
-	data, err := s.storageHandler.Read("") // TODO: constant for root path for Helm charts
+	data, err := s.storageHandler.Read(".") // TODO: constant for root path for Helm charts
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
