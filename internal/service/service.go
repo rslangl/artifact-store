@@ -15,7 +15,7 @@ type WebService struct {
 	httpServer *http.Server
 }
 
-func Create(config config.ServiceConfig, storage *storage.Storage) WebService {
+func Create(config config.ServiceConfig, storage storage.Storage) WebService {
 	server := api.NewServer(storage)
 	router := http.NewServeMux()
 

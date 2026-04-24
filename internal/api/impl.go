@@ -10,10 +10,10 @@ import (
 )
 
 type Server struct{
-	storageHandler *storage.Storage
+	storageHandler storage.Storage
 }
 
-func NewServer(storageHandler *storage.Storage) Server {
+func NewServer(storageHandler storage.Storage) Server {
 	return Server{
 		storageHandler: storageHandler,
 	}

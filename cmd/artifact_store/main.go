@@ -44,7 +44,8 @@ func main() {
 	// }
 	// log.Printf("%v", stg.ToString())
 	
-	if handler, err := &storage.New(cfg.Storage); err != nil {
+	handler, err := storage.New(cfg.Storage)
+	if err != nil {
 		log.Fatalf("Could not initialize storage backend: %v", err)
 	}
 
