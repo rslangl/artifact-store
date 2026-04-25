@@ -24,8 +24,3 @@ func New(config config.StorageConfig) (Storage, error) {
 			return nil, fmt.Errorf("Unknown or unsupported storage backend: %v", config.Backend)
 	}
 }
-
-// func (stg* Storage) ToString() string {
-// 	output := fmt.Sprintf("storage : ")
-// 	return output
-// }

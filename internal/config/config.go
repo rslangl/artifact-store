@@ -12,7 +12,6 @@ type FsConfig struct {
 }
 
 type StorageConfig struct {
-	//Enabled []string `yaml:,enabled` // TODO: remove or refactor
 	Backend string `yaml:backend`
 	Fs FsConfig `yaml:fs,omitempty`
 }
