@@ -4,22 +4,7 @@ import (
 	"testing"
 )
 
-func isEqual(v1, v2 []string) bool {
-	if len(v1) != len(v2) {
-		return false
-	}
-	for idx := range v1 {
-		if v1[idx] != v2[idx] {
-			return false
-		}
-	}
-	return true
-}
-
 func TestCreate(t *testing.T) {
-
-	cfg := &Config{}
-
 	tests := []struct{
 		// The argument passed to the function
 		path string
@@ -33,7 +18,10 @@ func TestCreate(t *testing.T) {
 			"",
 			Config{
 				Storage: StorageConfig{
-					Enabled: []string{"fs"},
+					Backend: "fs",
+					Fs: FsConfig{
+						Path: "/tmp/artifact-store/",
+					},
 				},
 			},
 			false,
@@ -43,7 +31,7 @@ func TestCreate(t *testing.T) {
 			"config_test.yaml",
 			Config{
 				Storage: StorageConfig{
-					Enabled: []string{"fs", "nas", "s3"},
+					Backend: "fs",
 					Fs: FsConfig{
 						Path: "/tmp/artifact-store/",
 					},
@@ -55,14 +43,17 @@ func TestCreate(t *testing.T) {
 
 	for _, testInput := range tests {
 		t.Run(testInput.path, func(t *testing.T) {
-			err := cfg.Create(testInput.path)
+			cfg, err := New(testInput.path)
+			if err != nil {
+				t.Errorf("%v", err)
+			}
 
 			if (err != nil) != testInput.wantErr {
 				t.Errorf("expected error: %v, got error: %v", testInput.wantErr, err)
 			}
 
-			if !isEqual(cfg.Storage.Enabled, testInput.expected.Storage.Enabled) {
-				t.Errorf("expected %v, got %v", testInput.expected.Storage.Enabled, cfg.Storage.Enabled)
+			if cfg.Storage.Backend != testInput.expected.Storage.Backend {
+				t.Errorf("expected %v, got %v", testInput.expected.Storage.Backend, cfg.Storage.Backend)
 			}
 		})
 	}

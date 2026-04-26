@@ -2,27 +2,48 @@ package api
 
 import (
 	"encoding/json"
-	"net/http"
 	"fmt"
+	"io/fs"
+	"net/http"
+	//"path"
+
+	"artifact-store/internal/storage"
 )
 
-type Server struct{}
-
-func NewServer() Server {
-	return Server{}
+type Server struct{
+	storageHandler storage.Storage
 }
 
-func (Server) GetCharts(w http.ResponseWriter, r *http.Request) {
-	// TODO: interface to storage backend for querying
-	res := Chart{Id: new(int64(1)), Name: new(string("test-chart"))}
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(res)
+func NewServer(storageHandler storage.Storage) Server {
+	return Server{
+		storageHandler: storageHandler,
+	}
 }
 
-func (Server) GetChart(w http.ResponseWriter, r *http.Request, name string, version string) {
-	res := Chart{Id: new(int64(1337)), Name: new(string("test-chart-2"))}
+func (s Server) GetCharts(w http.ResponseWriter, r *http.Request) {
+	data, err := s.storageHandler.Read("", "")
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(res)
+	_ = json.NewEncoder(w).Encode(data)
+}
+
+func (s Server) GetChart(w http.ResponseWriter, r *http.Request, name string, version string) {
+	data, err := s.storageHandler.Read(name, version)
+	if err != nil {
+		if err == fs.ErrNotExist { // TODO: map to generic error types in case other backends are used
+			w.WriteHeader(http.StatusNotFound)
+			_ = json.NewEncoder(w).Encode(err) // TODO: define error type
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(err) // TODO: define error type
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(data)
 }
 
 func (Server) GetChartVersions(w http.ResponseWriter, r *http.Request, name string) {
