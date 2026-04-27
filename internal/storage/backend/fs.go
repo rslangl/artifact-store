@@ -5,6 +5,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+
+	"artifact-store/internal/storage/storage_error"
 )
 
 type FileSystem struct {
@@ -30,23 +32,23 @@ func (f *FileSystem) Write(bytes []byte) error { // TODO: define type `artifact`
 func (f *FileSystem) Read(resource string, version string) ([]byte, error) {
 	dir, err := f.Path.Open(filepath.Join(resource, version))
 	if err != nil {
-		return nil, err
+		return nil, storage_error.IOError
 	}
 	if rd, ok := dir.(fs.ReadDirFile); ok {
 		entries, err := rd.ReadDir(-1)
 		if err != nil {
 			dir.Close()
-			return nil, err
+			return nil, storage_error.IOError
 		}
 		if len(entries) == 0 {
 			dir.Close()
-			return nil, fs.ErrNotExist
+			return nil, storage_error.NotFound
 		}
 		file := path.Join(resource, version, entries[0].Name())
 		dir.Close()
 		fileBytes, err := fs.ReadFile(f.Path, path.Clean(file))
 		if err != nil {
-			return nil, err
+			return nil, storage_error.IOError
 		}
 		return fileBytes, nil
 	}

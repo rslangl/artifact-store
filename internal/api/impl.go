@@ -3,12 +3,29 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"net/http"
 	//"path"
 
 	"artifact-store/internal/storage"
+	"artifact-store/internal/storage/storage_error"
 )
+
+type ArtifactErrorMessage interface {
+	ResourceNotFound(resource string, version string)
+	InternalServerError(resource string, version string)
+}
+
+type ArtifactError struct {
+	ErrorMessage string
+}
+
+func (e* ArtifactError) ResourceNotFound(resource string, version string) {
+	e.ErrorMessage = fmt.Sprintf("The requested resource '%v:%v' was not found", resource, version)
+}
+
+func (e* ArtifactError) InternalServerError(resource string, version string) {
+	e.ErrorMessage = fmt.Sprintf("Internal server error occurred while fetching the requested resource '%v:%v'", resource, version)
+}
 
 type Server struct{
 	storageHandler storage.Storage
@@ -30,19 +47,25 @@ func (s Server) GetCharts(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(data)
 }
 
-func (s Server) GetChart(w http.ResponseWriter, r *http.Request, name string, version string) {
-	data, err := s.storageHandler.Read(name, version)
+func (s Server) GetChart(w http.ResponseWriter, r *http.Request, resource string, version string) {
+	data, err := s.storageHandler.Read(resource, version)
 	if err != nil {
-		if err == fs.ErrNotExist { // TODO: map to generic error types in case other backends are used
+		e := &ArtifactError{}
+		if err == storage_error.NotFound {
+			e.ResourceNotFound(resource, version)
 			w.WriteHeader(http.StatusNotFound)
-			_ = json.NewEncoder(w).Encode(err) // TODO: define error type
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(e)
 			return
 		}
+		e.InternalServerError(resource, version)
 		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(err) // TODO: define error type
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(e)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(data)
 }
 
