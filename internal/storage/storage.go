@@ -9,7 +9,7 @@ import (
 
 type Storage interface {
 	Read(location string, version string) ([]byte, error)
-	Write(bytes []byte) error
+	Write(name string, bytes []byte) error
 }
 
 func New(config config.StorageConfig) (Storage, error) {

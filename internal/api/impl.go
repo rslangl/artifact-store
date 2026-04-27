@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	//"path"
 
@@ -75,8 +76,39 @@ func (Server) GetChartVersions(w http.ResponseWriter, r *http.Request, name stri
 	_ = json.NewEncoder(w).Encode(res)
 }
 
-func (Server) AddChart(w http.ResponseWriter, r *http.Request) {
-	// TODO: interface to storage backend for creating
-	res := fmt.Sprintf("%v", r)
-	_ = json.NewEncoder(w).Encode(res)
+func (s Server) AddChart(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")  // TODO: set globally, or default?
+
+	// Set max header size (50MB)
+	r.Body = http.MaxBytesReader(w, r.Body, 50<<20) // TODO: set globally, or default?
+
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(NewError(http.StatusBadRequest, "Invalid form data"))
+		return
+	}
+
+	file, fh, err := r.FormFile("chart")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(NewError(http.StatusBadRequest, "Missing chart"))
+		return
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(NewError(http.StatusBadRequest, "Malformed file upload"))
+		return
+	}
+
+	if err := s.storageHandler.Write(fh.Filename, data); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(NewError(http.StatusInternalServerError, "Error occurred durinf file IO"))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode("")
 }

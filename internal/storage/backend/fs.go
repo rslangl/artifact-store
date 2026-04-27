@@ -23,7 +23,7 @@ func NewFSBackend(path string) (*FileSystem, error) {
 }
 
 // Implementation of the `Writer` interface
-func (f *FileSystem) Write(bytes []byte) error { // TODO: define type `artifact` or similar instead
+func (f *FileSystem) Write(name string, bytes []byte) error { // TODO: define type `artifact` or similar instead
 	// TODO: create path if not exists (requires more parameters)
 	return nil
 }
