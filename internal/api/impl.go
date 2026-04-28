@@ -105,7 +105,10 @@ func (s Server) AddChart(w http.ResponseWriter, r *http.Request) {
 	f, fh, err := r.FormFile("chart")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(NewError(http.StatusBadRequest, "Missing chart"))
+		_ = json.NewEncoder(w).Encode(Error{
+			Code: new(int(http.StatusBadRequest)),
+			Message: new(string("Missing chart")),
+		})
 		return
 	}
 	defer f.Close()
@@ -134,14 +137,16 @@ func (s Server) AddChart(w http.ResponseWriter, r *http.Request) {
 
 	if err := s.storageHandler.Write(name, bytes); err != nil {  // TODO: return created version
 		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(NewError(http.StatusInternalServerError, "Error occurred during file IO"))
+		_ = json.NewEncoder(w).Encode(Error{
+			Code: new(int(http.StatusInternalServerError)),
+			Message: new(string("Error occurred during file IO")),
+		})
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(Error{
 		Code: new(int(http.StatusCreated)),
-		//Message: &msg,
 		Message: new(string(fmt.Sprintf("Chart '%v' created", name))),
 	})
 }
