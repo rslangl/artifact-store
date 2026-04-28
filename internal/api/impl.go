@@ -113,6 +113,8 @@ func (s Server) AddChart(w http.ResponseWriter, r *http.Request) {
 	}
 	defer f.Close()
 
+	// TODO: validate file type is .tgz
+
 	data, err := io.ReadAll(f)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

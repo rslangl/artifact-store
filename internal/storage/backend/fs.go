@@ -2,6 +2,7 @@ package backend
 
 import (
 	"io/fs"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -10,6 +11,7 @@ import (
 )
 
 type FileSystem struct {
+	root string
 	Path fs.FS
 }
 
@@ -18,14 +20,32 @@ func NewFSBackend(path string) (*FileSystem, error) {
 		return nil, err
 	}
 	return &FileSystem{
+		root: path,
 		Path: os.DirFS(path),
 	}, nil
 }
 
 // Implementation of the `Writer` interface
 func (f *FileSystem) Write(name string, bytes []byte) error { // TODO: define type `artifact` or similar instead
-	// TODO: create path if not exists (requires more parameters)
-	return nil
+	path := filepath.Join(f.root, name)
+
+	// TODO: to be implemented when we decide to add repositories
+	// if err := os.MkdirAll(filepath.Dir(<f.root + repo>), 0o744); err != nil {
+	// 	return err
+	// }
+
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.Write(bytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return err
 }
 
 // Implementation of the `Reader` interface
