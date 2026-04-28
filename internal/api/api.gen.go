@@ -29,6 +29,7 @@ type Error struct {
 type AddChartMultipartBody struct {
 	// Chart The packaged chart file (.tgz)
 	Chart *openapi_types.File `json:"chart,omitempty"`
+	Name  *string             `json:"name,omitempty"`
 }
 
 // AddChartMultipartRequestBody defines body for AddChart for multipart/form-data ContentType.

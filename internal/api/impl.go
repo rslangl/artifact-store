@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	//"path"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"artifact-store/internal/storage"
 	"artifact-store/internal/storage/storage_error"
@@ -82,33 +82,66 @@ func (s Server) AddChart(w http.ResponseWriter, r *http.Request) {
 	// Set max header size (50MB)
 	r.Body = http.MaxBytesReader(w, r.Body, 50<<20) // TODO: set globally, or default?
 
-	if err := r.ParseMultipartForm(10 << 20); err != nil {
+	// Limit parsed form size (32MB)
+	if err := r.ParseMultipartForm(32 << 20); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(NewError(http.StatusBadRequest, "Invalid form data"))
+		_ = json.NewEncoder(w).Encode(Error{
+			Code: new(int(http.StatusBadRequest)),
+			Message: new(string("Invalid form data")),
+		})
 		return
 	}
+	defer func() {
+		if r.MultipartForm != nil {
+			// Clean up temp files
+			r.MultipartForm.RemoveAll()
+		}
+	}()
 
-	file, fh, err := r.FormFile("chart")
+	// Extract chart name from form data
+	name := r.FormValue("name")
+
+	// Extract chart bytes from form data
+	f, fh, err := r.FormFile("chart")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(NewError(http.StatusBadRequest, "Missing chart"))
 		return
 	}
-	defer file.Close()
+	defer f.Close()
 
-	data, err := io.ReadAll(file)
+	data, err := io.ReadAll(f)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(NewError(http.StatusBadRequest, "Malformed file upload"))
-		return
+		_ = json.NewEncoder(w).Encode(Error{
+			Code: new(int(http.StatusBadRequest)),
+			Message: new(string("Malformed file contents")),
+		})
 	}
 
-	if err := s.storageHandler.Write(fh.Filename, data); err != nil {
+	// Construct runtime type for compatibility with generated types
+	file := &openapi_types.File{}
+	file.InitFromBytes(data, fh.Filename)
+
+	bytes, err := file.Bytes()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(Error{
+			Code: new(int(http.StatusBadRequest)),
+			Message: new(string("Malformed file upload")),
+		})
+	}
+
+	if err := s.storageHandler.Write(name, bytes); err != nil {  // TODO: return created version
 		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(NewError(http.StatusInternalServerError, "Error occurred durinf file IO"))
+		_ = json.NewEncoder(w).Encode(NewError(http.StatusInternalServerError, "Error occurred during file IO"))
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode("")
+	_ = json.NewEncoder(w).Encode(Error{
+		Code: new(int(http.StatusCreated)),
+		//Message: &msg,
+		Message: new(string(fmt.Sprintf("Chart '%v' created", name))),
+	})
 }
