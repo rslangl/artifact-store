@@ -7,7 +7,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"artifact-store/internal/storage/storage_error"
+	"artifacts/internal/storage/storage_error"
 )
 
 type FileSystem struct {
