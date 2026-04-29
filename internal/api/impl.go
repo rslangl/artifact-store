@@ -7,8 +7,8 @@ import (
 	"net/http"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
-	"artifact-store/internal/storage"
-	"artifact-store/internal/storage/storage_error"
+	"artifacts/internal/storage"
+	"artifacts/internal/storage/storage_error"
 )
 
 type ArtifactErrorMessage interface {

@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"context"
 
-	"artifact-store/internal/api"
-	"artifact-store/internal/config"
-	"artifact-store/internal/storage"
+	"artifacts/internal/api"
+	"artifacts/internal/config"
+	"artifacts/internal/storage"
 )
 
 type WebService struct {

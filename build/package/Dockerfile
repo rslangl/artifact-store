@@ -1,5 +1,5 @@
-ARG BIN=artifact-store
-ARG CMD=./cmd/artifact_store
+ARG BIN=artifacts
+ARG CMD=./cmd/artifacts
 
 FROM golang:tip-alpine3.23 AS builder
 
