@@ -41,15 +41,14 @@ func (s Server) GetChart(w http.ResponseWriter, r *http.Request, resource string
 			w.WriteHeader(http.StatusNotFound)
 			_ = json.NewEncoder(w).Encode(Error{
 				Code: new(int(http.StatusNotFound)),
-				Message: new(string(fmt.Sprintf("Resource '%v:%v' was not found", resource, version)),
+				Message: new(string(fmt.Sprintf("Resource '%v:%v' was not found", resource, version))),
 			})
 			return
 		}
 
-		e.InternalServerError(resource, version)
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(Error{
-			Code: new(int(http.StatusInternalServerError),
+			Code: new(int(http.StatusInternalServerError)),
 			Message: new(string(fmt.Sprintf("Internal server error occurred for '%v:%v'", resource, version))),
 		})
 		return
