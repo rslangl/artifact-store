@@ -20,7 +20,7 @@ func TestCreate(t *testing.T) {
 				Storage: StorageConfig{
 					Backend: "fs",
 					Fs: FsConfig{
-						Path: "/tmp/artifact-store/",
+						Path: "/tmp/artifacts/",
 					},
 				},
 			},
@@ -33,7 +33,7 @@ func TestCreate(t *testing.T) {
 				Storage: StorageConfig{
 					Backend: "fs",
 					Fs: FsConfig{
-						Path: "/tmp/artifact-store/",
+						Path: "/tmp/artifacts/",
 					},
 				},
 			},

@@ -2,12 +2,12 @@
 # Project variables
 # --------------------
 
-MAIN_PATH := ./cmd/artifact_store
+MAIN_PATH := ./cmd/artifacts
 BUILD_PATH := ./build/package
 OUTPUT_PATH := ./output
 CONFIG_PATH := ./config
 TMP_PATH := ${OUTPUT_PATH}/tmp
-BIN_NAME := artifactstore
+BIN_NAME := artifacts
 DOCKER_FILE_PATH := ./build/package/Dockerfile
 DOCKER_TAG := local
 

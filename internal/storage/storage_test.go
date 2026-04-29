@@ -4,8 +4,8 @@ import (
 	"testing"
 	"os"
 
-	"artifact-store/internal/config"
-	"artifact-store/internal/storage/backend"
+	"artifacts/internal/config"
+	"artifacts/internal/storage/backend"
 )
 
 func TestCreate(t *testing.T) {
@@ -22,11 +22,11 @@ func TestCreate(t *testing.T) {
 			config.StorageConfig{
 				Backend: "fs",
 				Fs: config.FsConfig{
-					Path: "/tmp/artifact-store/",
+					Path: "/tmp/artifacts/",
 				},
 			},
 			backend.FileSystem{
-				Path: os.DirFS("/tmp/artifact-store/"),
+				Path: os.DirFS("/tmp/artifacts/"),
 			},
 			false,
 		},

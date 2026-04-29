@@ -3,8 +3,8 @@ package storage
 import (
 	"fmt"
 
-	"artifact-store/internal/config"
-	"artifact-store/internal/storage/backend"
+	"artifacts/internal/config"
+	"artifacts/internal/storage/backend"
 )
 
 type Storage interface {

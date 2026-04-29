@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"artifact-store/internal/storage"
-	"artifact-store/internal/config"
-	"artifact-store/internal/service"
+	"artifacts/internal/storage"
+	"artifacts/internal/config"
+	"artifacts/internal/service"
 )
 
 type CliOpts struct {
