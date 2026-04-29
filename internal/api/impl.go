@@ -11,23 +11,6 @@ import (
 	"artifacts/internal/storage/storage_error"
 )
 
-type ArtifactErrorMessage interface {
-	ResourceNotFound(resource string, version string)
-	InternalServerError(resource string, version string)
-}
-
-type ArtifactError struct {
-	ErrorMessage string
-}
-
-func (e* ArtifactError) ResourceNotFound(resource string, version string) {
-	e.ErrorMessage = fmt.Sprintf("The requested resource '%v:%v' was not found", resource, version)
-}
-
-func (e* ArtifactError) InternalServerError(resource string, version string) {
-	e.ErrorMessage = fmt.Sprintf("Internal server error occurred while fetching the requested resource '%v:%v'", resource, version)
-}
-
 type Server struct{
 	storageHandler storage.Storage
 }
@@ -49,24 +32,30 @@ func (s Server) GetCharts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) GetChart(w http.ResponseWriter, r *http.Request, resource string, version string) {
+	w.Header().Set("Content-Type", "application/json")
+
 	data, err := s.storageHandler.Read(resource, version)
+
 	if err != nil {
-		e := &ArtifactError{}
 		if err == storage_error.NotFound {
-			e.ResourceNotFound(resource, version)
 			w.WriteHeader(http.StatusNotFound)
-			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(e)
+			_ = json.NewEncoder(w).Encode(Error{
+				Code: new(int(http.StatusNotFound)),
+				Message: new(string(fmt.Sprintf("Resource '%v:%v' was not found", resource, version)),
+			})
 			return
 		}
+
 		e.InternalServerError(resource, version)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(e)
+		_ = json.NewEncoder(w).Encode(Error{
+			Code: new(int(http.StatusInternalServerError),
+			Message: new(string(fmt.Sprintf("Internal server error occurred for '%v:%v'", resource, version))),
+		})
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(data)
 }
 
