@@ -67,15 +67,17 @@ type RepositoryArtifact string
 // AddChartMultipartBody defines parameters for AddChart.
 type AddChartMultipartBody struct {
 	// Chart The packaged chart file (.tgz)
-	Chart *openapi_types.File `json:"chart,omitempty"`
-	Name  *string             `json:"name,omitempty"`
+	Chart      *openapi_types.File `json:"chart,omitempty"`
+	Name       *string             `json:"name,omitempty"`
+	Repository *string             `json:"repository,omitempty"`
 }
 
 // AddRepositoryMultipartBody defines parameters for AddRepository.
 type AddRepositoryMultipartBody struct {
 	// Artifact The artifact kind the repository will host
-	Artifact AddRepositoryMultipartBodyArtifact `json:"artifact"`
-	Name     string                             `json:"name"`
+	Artifact   AddRepositoryMultipartBodyArtifact `json:"artifact"`
+	Name       string                             `json:"name"`
+	Repository string                             `json:"repository"`
 }
 
 // AddRepositoryMultipartBodyArtifact defines parameters for AddRepository.
@@ -99,8 +101,8 @@ type ServerInterface interface {
 	// (GET /v1/helm/{name}/versions)
 	GetChartVersions(w http.ResponseWriter, r *http.Request, name string)
 	// Download version of Helm chart
-	// (GET /v1/helm/{name}/{version})
-	GetChart(w http.ResponseWriter, r *http.Request, name string, version string)
+	// (GET /v1/helm/{repository}/{name}/{version})
+	GetChart(w http.ResponseWriter, r *http.Request, repository string, name string, version string)
 	// Get all available repositories
 	// (GET /v1/repositories)
 	GetRepositories(w http.ResponseWriter, r *http.Request)
@@ -176,6 +178,15 @@ func (siw *ServerInterfaceWrapper) GetChart(w http.ResponseWriter, r *http.Reque
 
 	var err error
 
+	// ------------- Path parameter "repository" -------------
+	var repository string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repository", r.PathValue("repository"), &repository, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: false, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repository", Err: err})
+		return
+	}
+
 	// ------------- Path parameter "name" -------------
 	var name string
 
@@ -195,7 +206,7 @@ func (siw *ServerInterfaceWrapper) GetChart(w http.ResponseWriter, r *http.Reque
 	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetChart(w, r, name, version)
+		siw.Handler.GetChart(w, r, repository, name, version)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -356,7 +367,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc("GET "+options.BaseURL+"/v1/helm", wrapper.GetCharts)
 	m.HandleFunc("POST "+options.BaseURL+"/v1/helm/", wrapper.AddChart)
 	m.HandleFunc("GET "+options.BaseURL+"/v1/helm/{name}/versions", wrapper.GetChartVersions)
-	m.HandleFunc("GET "+options.BaseURL+"/v1/helm/{name}/{version}", wrapper.GetChart)
+	m.HandleFunc("GET "+options.BaseURL+"/v1/helm/{repository}/{name}/{version}", wrapper.GetChart)
 	m.HandleFunc("GET "+options.BaseURL+"/v1/repositories", wrapper.GetRepositories)
 	m.HandleFunc("POST "+options.BaseURL+"/v1/repositories", wrapper.AddRepository)
 

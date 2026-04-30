@@ -26,8 +26,8 @@ func NewFSBackend(path string) (*FileSystem, error) {
 }
 
 // Implementation of the `Writer` interface
-func (f *FileSystem) Write(name string, bytes []byte) error { // TODO: define type `artifact` or similar instead
-	path := filepath.Join(f.root, name)
+func (f *FileSystem) Write(repository string, name string, bytes []byte) error { // TODO: define type `artifact` or similar instead
+	path := filepath.Join(f.root, repository, name)
 
 	// TODO: to be implemented when we decide to add repositories
 	// if err := os.MkdirAll(filepath.Dir(<f.root + repo>), 0o744); err != nil {
@@ -49,8 +49,8 @@ func (f *FileSystem) Write(name string, bytes []byte) error { // TODO: define ty
 }
 
 // Implementation of the `Reader` interface
-func (f *FileSystem) Read(resource string, version string) ([]byte, error) {
-	dir, err := f.Path.Open(filepath.Join(resource, version))
+func (f *FileSystem) Read(repository string, resource string, version string) ([]byte, error) {
+	dir, err := f.Path.Open(filepath.Join(repository, resource, version))
 	if err != nil {
 		return nil, storage_error.IOError
 	}

@@ -28,6 +28,8 @@ paths:
               properties:
                 name:
                   type: string
+                repository:
+                  type: string
                 artifact:
                   type: string
                   description: "The artifact kind the repository will host"
@@ -35,6 +37,7 @@ paths:
                     - helm
               required:
                 - name
+                - repository
                 - artifact
       responses:
         '201':
@@ -123,18 +126,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /v1/helm/{name}/{version}:
+  /v1/helm/{repository}/{name}/{version}:
     get:
       summary: "Download version of Helm chart"
       operationId: "getChart"
       parameters:
+        - name: repository
+          in: path
+          required: false
+          schema:
+            type: string
+            default: default
+          description: "Chart repository"
         - name: name
           in: path
           required: true
           schema:
             type: string
           description: "Helm chart name"
-        - name: version
+        - name: version # TODO: make optional, default to 'latest'
           in: path
           required: true
           schema:
@@ -171,6 +181,8 @@ paths:
               type: object
               properties:
                 name:
+                  type: string
+                repository:
                   type: string
                 chart:
                   type: string

@@ -13,7 +13,7 @@ import (
 )
 
 func (s Server) GetCharts(w http.ResponseWriter, r *http.Request) {
-	data, err := s.storageHandler.Read("", "")
+	data, err := s.storageHandler.Read("", "", "")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -22,10 +22,10 @@ func (s Server) GetCharts(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(data)
 }
 
-func (s Server) GetChart(w http.ResponseWriter, r *http.Request, resource string, version string) {
+func (s Server) GetChart(w http.ResponseWriter, r *http.Request, repository string, resource string, version string) {
 	w.Header().Set("Content-Type", "application/json")
 
-	data, err := s.storageHandler.Read(resource, version)
+	data, err := s.storageHandler.Read(repository, resource, version)
 
 	if err != nil {
 		if err == storage_error.NotFound {
@@ -76,6 +76,16 @@ func (s Server) AddChart(w http.ResponseWriter, r *http.Request) {
 			r.MultipartForm.RemoveAll()
 		}
 	}()
+
+	repo := r.FormValue("repository")
+	if repo == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(Error{
+			Code: new(int(http.StatusBadRequest)),
+			Message: new(string("Missing 'repository' parameter")),
+		})
+		return
+	}
 
 	// Extract chart name from form data
 	name := r.FormValue("name")
@@ -132,7 +142,7 @@ func (s Server) AddChart(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	if err := s.storageHandler.Write(name, bytes); err != nil {  // TODO: return created version
+	if err := s.storageHandler.Write(repo, name, bytes); err != nil {  // TODO: return created version
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(Error{
 			Code: new(int(http.StatusInternalServerError)),

@@ -8,8 +8,8 @@ import (
 )
 
 type Storage interface {
-	Read(location string, version string) ([]byte, error)
-	Write(name string, bytes []byte) error
+	Read(repository string, resource string, version string) ([]byte, error)
+	Write(repository string, name string, bytes []byte) error
 }
 
 func New(config config.StorageConfig) (Storage, error) {
