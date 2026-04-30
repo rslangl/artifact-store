@@ -4,6 +4,68 @@ info:
   title: "Artifact Store API specification"
   version: "0.1.0"
 paths:
+  /v1/repositories:
+    get:
+      summary: "Get all available repositories"
+      operationId: "getRepositories"
+      responses:
+        '200':
+          description: List of repositories
+          content:
+            application/json:
+              schema:
+                type: array
+                $ref: '#/components/schemas/Repository'
+    post:
+      summary: "Create repository"
+      operationId: "addRepository"
+      operation: addRepository
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                artifact:
+                  type: string
+                  description: "The artifact kind the repository will host"
+                  enum:
+                    - helm
+              required:
+                - name
+                - artifact
+      responses:
+        '201':
+          description: "Repository created"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                required:
+                  - name
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: "Conflict — repository already exists"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /v1/helm:
     get:
       summary: "Get all available Helm charts"
@@ -103,7 +165,6 @@ paths:
       summary: "Add Helm chart"
       operationId: "addChart"
       requestBody:
-        required: true
         content:
           multipart/form-data:
             schema:
@@ -158,6 +219,15 @@ components:
           type: integer
         message:
           type: string
+    Repository:
+      type: object
+      properties:
+        name:
+          type: string
+        artifact:
+          type: string
+          enum:
+            - chart
     Chart:
       type: object
       properties:

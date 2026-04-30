@@ -13,6 +13,36 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for RepositoryArtifact.
+const (
+	RepositoryArtifactChart RepositoryArtifact = "chart"
+)
+
+// Valid indicates whether the value is a known member of the RepositoryArtifact enum.
+func (e RepositoryArtifact) Valid() bool {
+	switch e {
+	case RepositoryArtifactChart:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AddRepositoryMultipartBodyArtifact.
+const (
+	Helm AddRepositoryMultipartBodyArtifact = "helm"
+)
+
+// Valid indicates whether the value is a known member of the AddRepositoryMultipartBodyArtifact enum.
+func (e AddRepositoryMultipartBodyArtifact) Valid() bool {
+	switch e {
+	case Helm:
+		return true
+	default:
+		return false
+	}
+}
+
 // Chart defines model for Chart.
 type Chart struct {
 	Id   *int64  `json:"id,omitempty"`
@@ -25,6 +55,15 @@ type Error struct {
 	Message *string `json:"message,omitempty"`
 }
 
+// Repository defines model for Repository.
+type Repository struct {
+	Artifact *RepositoryArtifact `json:"artifact,omitempty"`
+	Name     *string             `json:"name,omitempty"`
+}
+
+// RepositoryArtifact defines model for Repository.Artifact.
+type RepositoryArtifact string
+
 // AddChartMultipartBody defines parameters for AddChart.
 type AddChartMultipartBody struct {
 	// Chart The packaged chart file (.tgz)
@@ -32,8 +71,21 @@ type AddChartMultipartBody struct {
 	Name  *string             `json:"name,omitempty"`
 }
 
+// AddRepositoryMultipartBody defines parameters for AddRepository.
+type AddRepositoryMultipartBody struct {
+	// Artifact The artifact kind the repository will host
+	Artifact AddRepositoryMultipartBodyArtifact `json:"artifact"`
+	Name     string                             `json:"name"`
+}
+
+// AddRepositoryMultipartBodyArtifact defines parameters for AddRepository.
+type AddRepositoryMultipartBodyArtifact string
+
 // AddChartMultipartRequestBody defines body for AddChart for multipart/form-data ContentType.
 type AddChartMultipartRequestBody AddChartMultipartBody
+
+// AddRepositoryMultipartRequestBody defines body for AddRepository for multipart/form-data ContentType.
+type AddRepositoryMultipartRequestBody AddRepositoryMultipartBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -49,6 +101,12 @@ type ServerInterface interface {
 	// Download version of Helm chart
 	// (GET /v1/helm/{name}/{version})
 	GetChart(w http.ResponseWriter, r *http.Request, name string, version string)
+	// Get all available repositories
+	// (GET /v1/repositories)
+	GetRepositories(w http.ResponseWriter, r *http.Request)
+	// Create repository
+	// (POST /v1/repositories)
+	AddRepository(w http.ResponseWriter, r *http.Request)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -138,6 +196,34 @@ func (siw *ServerInterfaceWrapper) GetChart(w http.ResponseWriter, r *http.Reque
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetChart(w, r, name, version)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetRepositories operation middleware
+func (siw *ServerInterfaceWrapper) GetRepositories(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRepositories(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AddRepository operation middleware
+func (siw *ServerInterfaceWrapper) AddRepository(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AddRepository(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -271,6 +357,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc("POST "+options.BaseURL+"/v1/helm/", wrapper.AddChart)
 	m.HandleFunc("GET "+options.BaseURL+"/v1/helm/{name}/versions", wrapper.GetChartVersions)
 	m.HandleFunc("GET "+options.BaseURL+"/v1/helm/{name}/{version}", wrapper.GetChart)
+	m.HandleFunc("GET "+options.BaseURL+"/v1/repositories", wrapper.GetRepositories)
+	m.HandleFunc("POST "+options.BaseURL+"/v1/repositories", wrapper.AddRepository)
 
 	return m
 }
