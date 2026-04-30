@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"slices"
 	"net/http"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"artifacts/internal/storage"
 	"artifacts/internal/storage/storage_error"
 )
+
+var chartMIMEType = []string{"application/gzip"}
 
 type Server struct{
 	storageHandler storage.Storage
@@ -88,6 +91,14 @@ func (s Server) AddChart(w http.ResponseWriter, r *http.Request) {
 
 	// Extract chart name from form data
 	name := r.FormValue("name")
+	if name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(Error{
+			Code: new(int(http.StatusBadRequest)),
+			Message: new(string("Missing 'name' parameter")),
+		})
+		return
+	}
 
 	// Extract chart bytes from form data
 	f, fh, err := r.FormFile("chart")
@@ -101,7 +112,15 @@ func (s Server) AddChart(w http.ResponseWriter, r *http.Request) {
 	}
 	defer f.Close()
 
-	// TODO: validate file type is .tgz
+	// Reject unsupported MIME type
+	if eq := slices.Compare(fh.Header["Content-Type"], chartMIMEType); eq != 0 {
+		w.WriteHeader(http.StatusUnsupportedMediaType)
+		_ = json.NewEncoder(w).Encode(Error{
+			Code: new(int(http.StatusUnsupportedMediaType)),
+			Message: new(string(fmt.Sprintf("Unsupported type: %v", fh.Header["Content-Type"]))),
+		})
+		return
+	}
 
 	data, err := io.ReadAll(f)
 	if err != nil {
