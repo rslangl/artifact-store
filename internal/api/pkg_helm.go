@@ -12,6 +12,8 @@ import (
 	"artifacts/internal/storage/storage_error"
 )
 
+var chartMIMEType = []string{"application/octet-stream"}
+
 func (s Server) GetCharts(w http.ResponseWriter, r *http.Request) {
 	data, err := s.storageHandler.Read("", "", "")
 	if err != nil {

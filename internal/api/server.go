@@ -12,8 +12,6 @@ import (
 	//"artifacts/internal/storage/storage_error"
 )
 
-var chartMIMEType = []string{"application/gzip"}
-
 type Server struct{
 	storageHandler storage.Storage
 }

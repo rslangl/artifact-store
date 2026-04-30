@@ -29,10 +29,10 @@ func NewFSBackend(path string) (*FileSystem, error) {
 func (f *FileSystem) Write(repository string, name string, bytes []byte) error { // TODO: define type `artifact` or similar instead
 	path := filepath.Join(f.root, repository, name)
 
-	// TODO: to be implemented when we decide to add repositories
-	// if err := os.MkdirAll(filepath.Dir(<f.root + repo>), 0o744); err != nil {
-	// 	return err
-	// }
+	if err := os.MkdirAll(filepath.Dir(path), 0o744); err != nil {
+		log.Fatal(err)
+		return err
+	}
 
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
