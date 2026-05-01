@@ -13,6 +13,36 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Defines values for RepositoryArtifact.
+const (
+	RepositoryArtifactChart RepositoryArtifact = "chart"
+)
+
+// Valid indicates whether the value is a known member of the RepositoryArtifact enum.
+func (e RepositoryArtifact) Valid() bool {
+	switch e {
+	case RepositoryArtifactChart:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AddRepositoryMultipartBodyArtifact.
+const (
+	Helm AddRepositoryMultipartBodyArtifact = "helm"
+)
+
+// Valid indicates whether the value is a known member of the AddRepositoryMultipartBodyArtifact enum.
+func (e AddRepositoryMultipartBodyArtifact) Valid() bool {
+	switch e {
+	case Helm:
+		return true
+	default:
+		return false
+	}
+}
+
 // Chart defines model for Chart.
 type Chart struct {
 	Id   *int64  `json:"id,omitempty"`
@@ -25,15 +55,39 @@ type Error struct {
 	Message *string `json:"message,omitempty"`
 }
 
+// Repository defines model for Repository.
+type Repository struct {
+	Artifact *RepositoryArtifact `json:"artifact,omitempty"`
+	Name     *string             `json:"name,omitempty"`
+}
+
+// RepositoryArtifact defines model for Repository.Artifact.
+type RepositoryArtifact string
+
 // AddChartMultipartBody defines parameters for AddChart.
 type AddChartMultipartBody struct {
 	// Chart The packaged chart file (.tgz)
-	Chart *openapi_types.File `json:"chart,omitempty"`
-	Name  *string             `json:"name,omitempty"`
+	Chart      *openapi_types.File `json:"chart,omitempty"`
+	Name       *string             `json:"name,omitempty"`
+	Repository *string             `json:"repository,omitempty"`
 }
+
+// AddRepositoryMultipartBody defines parameters for AddRepository.
+type AddRepositoryMultipartBody struct {
+	// Artifact The artifact kind the repository will host
+	Artifact   AddRepositoryMultipartBodyArtifact `json:"artifact"`
+	Name       string                             `json:"name"`
+	Repository string                             `json:"repository"`
+}
+
+// AddRepositoryMultipartBodyArtifact defines parameters for AddRepository.
+type AddRepositoryMultipartBodyArtifact string
 
 // AddChartMultipartRequestBody defines body for AddChart for multipart/form-data ContentType.
 type AddChartMultipartRequestBody AddChartMultipartBody
+
+// AddRepositoryMultipartRequestBody defines body for AddRepository for multipart/form-data ContentType.
+type AddRepositoryMultipartRequestBody AddRepositoryMultipartBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -47,8 +101,14 @@ type ServerInterface interface {
 	// (GET /v1/helm/{name}/versions)
 	GetChartVersions(w http.ResponseWriter, r *http.Request, name string)
 	// Download version of Helm chart
-	// (GET /v1/helm/{name}/{version})
-	GetChart(w http.ResponseWriter, r *http.Request, name string, version string)
+	// (GET /v1/helm/{repository}/{name}/{version})
+	GetChart(w http.ResponseWriter, r *http.Request, repository string, name string, version string)
+	// Get all available repositories
+	// (GET /v1/repositories)
+	GetRepositories(w http.ResponseWriter, r *http.Request)
+	// Create repository
+	// (POST /v1/repositories)
+	AddRepository(w http.ResponseWriter, r *http.Request)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -118,6 +178,15 @@ func (siw *ServerInterfaceWrapper) GetChart(w http.ResponseWriter, r *http.Reque
 
 	var err error
 
+	// ------------- Path parameter "repository" -------------
+	var repository string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repository", r.PathValue("repository"), &repository, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: false, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repository", Err: err})
+		return
+	}
+
 	// ------------- Path parameter "name" -------------
 	var name string
 
@@ -137,7 +206,35 @@ func (siw *ServerInterfaceWrapper) GetChart(w http.ResponseWriter, r *http.Reque
 	}
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetChart(w, r, name, version)
+		siw.Handler.GetChart(w, r, repository, name, version)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetRepositories operation middleware
+func (siw *ServerInterfaceWrapper) GetRepositories(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRepositories(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AddRepository operation middleware
+func (siw *ServerInterfaceWrapper) AddRepository(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AddRepository(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -270,7 +367,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc("GET "+options.BaseURL+"/v1/helm", wrapper.GetCharts)
 	m.HandleFunc("POST "+options.BaseURL+"/v1/helm/", wrapper.AddChart)
 	m.HandleFunc("GET "+options.BaseURL+"/v1/helm/{name}/versions", wrapper.GetChartVersions)
-	m.HandleFunc("GET "+options.BaseURL+"/v1/helm/{name}/{version}", wrapper.GetChart)
+	m.HandleFunc("GET "+options.BaseURL+"/v1/helm/{repository}/{name}/{version}", wrapper.GetChart)
+	m.HandleFunc("GET "+options.BaseURL+"/v1/repositories", wrapper.GetRepositories)
+	m.HandleFunc("POST "+options.BaseURL+"/v1/repositories", wrapper.AddRepository)
 
 	return m
 }
