@@ -28,17 +28,16 @@ paths:
               properties:
                 name:
                   type: string
-                repository:
-                  type: string
-                artifact:
-                  type: string
-                  description: "The artifact kind the repository will host"
-                  enum:
-                    - helm
+                artifacts:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - helm
               required:
                 - name
                 - repository
-                - artifact
+                - artifacts
       responses:
         '201':
           description: "Repository created"
@@ -81,9 +80,60 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Chart'
+                  $ref: '#/components/schemas/Artifact'
         '400':
           description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: "Add Helm chart"
+      operationId: "addChart"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                repository:
+                  type: string
+                chart:
+                  type: string
+                  format: binary
+                  description: "The packaged chart file (.tgz)"
+      responses:
+        '201':
+          description: "Helm chart created"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  version:
+                    type: string
+                required:
+                  - name
+                  - version
+        '400':
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: "Conflict — chart version already exists"
           content:
             application/json:
               schema:
@@ -170,57 +220,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /v1/helm/:
-    post:
-      summary: "Add Helm chart"
-      operationId: "addChart"
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                repository:
-                  type: string
-                chart:
-                  type: string
-                  format: binary
-                  description: "The packaged chart file (.tgz)"
-      responses:
-        '201':
-          description: "Helm chart created"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  name:
-                    type: string
-                  version:
-                    type: string
-                required:
-                  - name
-                  - version
-        '400':
-          description: "Bad request"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '409':
-          description: "Conflict — chart version already exists"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
 
 components:
   schemas:
@@ -236,16 +235,39 @@ components:
       properties:
         name:
           type: string
-        artifact:
-          type: string
-          enum:
-            - chart
-    Chart:
+        artifacts:
+          type: array
+          $ref: '#/components/schemas/Artifact'
+    Artifact:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+        kind:
+          type: string
+          enum:
+            - helm
+      required:
+        - id
+        - kind
+      discriminator:
+        propertyName: kind
+        mapping:
+          helm: '#/components/schemas/Chart'
+          # TODO: add more as required, e.g. docker, npm, maven
+      oneOf:
+        - $ref: '#/components/schemas/Chart'
+        # TODO: add more as required, e.g. docker, npm, maven
+    Chart:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+            - helm
+        id:
+          type: string
         name:
           type: string
-
+        version:
+          type: string
